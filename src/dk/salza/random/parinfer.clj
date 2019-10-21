@@ -69,28 +69,30 @@
   
 (defn smart-mode
   [sl fun]
-  (let [sl1 (fun sl)
-        p1 (get-point sl1)
-        sl2 (-> sl1
-                end-of-toplevel
-                (set-mark "parinfer")
-                beginning-of-toplevel
-                left
-                beginning-of-toplevel)
-        p2 (get-point sl2)
-        delta (get-linenumber sl2)
-        subsl (set-point (get-region-as-slider sl2 "parinfer") (- p1 p2))
-        res (js-smart-mode (get-content subsl)
-                           {:cursorLine (- (get-linenumber sl1) delta) 
-                            :cursorX (- (get-point sl1) (get-point (beginning-of-line sl1))) 
-                            :prevCursorLine (- (get-linenumber sl) delta)
-                            :prevCursorX (- (get-point sl) (get-point (beginning-of-line sl)))})]
-    (-> sl2
-        (delete-region "parinfer")
-        (insert (res :text))
-        (set-point p2)
-        (forward-lines (res :cursorLine))
-        (right (res :cursorX)))))
+  (try
+    (let [sl1 (fun sl)
+          p1 (get-point sl1)
+          sl2 (-> sl1
+                  end-of-toplevel
+                  (set-mark "parinfer")
+                  beginning-of-toplevel
+                  left
+                  beginning-of-toplevel)
+          p2 (get-point sl2)
+          delta (get-linenumber sl2)
+          subsl (set-point (get-region-as-slider sl2 "parinfer") (- p1 p2))
+          res (js-smart-mode (get-content subsl)
+                             {:cursorLine (- (get-linenumber sl1) delta) 
+                              :cursorX (- (get-point sl1) (get-point (beginning-of-line sl1))) 
+                              :prevCursorLine (- (get-linenumber sl) delta)
+                              :prevCursorX (- (get-point sl) (get-point (beginning-of-line sl)))})]
+      (-> sl2
+          (delete-region "parinfer")
+          (insert (res :text))
+          (set-point p2)
+          (forward-lines (res :cursorLine))
+          (right (res :cursorX))))
+    (catch Exception e (fun sl))))
   
 (defn parinfer-keymap
   []
